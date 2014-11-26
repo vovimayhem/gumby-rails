@@ -1,361 +1,258 @@
-/* Gumby JS */
+/**
+* Gumby Framework
+* ---------------
+*
+* Follow @gumbycss on twitter and spread the love.
+* We worked super hard on making this awesome and released it to the web.
+* All we ask is you leave this intact. #gumbyisawesome
+*
+* Gumby Framework
+* http://gumbyframework.com
+*
+* Built with love by your friends @digitalsurgeons
+* http://www.digitalsurgeons.com
+*
+* Free to use under the MIT license.
+* http://www.opensource.org/licenses/mit-license.php
+*/
+!function($) {
 
-(function ($) {
+	'use strict';
 
-	var Gumby = function () {
+	function Gumby() {
+		this.$dom = $(document);
+		this.$html = this.$dom.find('html');
+		this.isOldie = !!this.$html.hasClass('oldie');
+		this.click = 'click';
+		this.onReady = this.onOldie = this.onTouch = false;
+		this.autoInit = $('script[gumby-init]').attr('gumby-init') === 'false' ? false : true;
+		this.debugMode = Boolean($('script[gumby-debug]').length);
+		this.touchDevice = !!(Modernizr.touch || window.navigator.userAgent.indexOf("Windows Phone") > 0);
+		this.gumbyTouch = false;
+		this.touchEvents = 'js/libs';
+		this.breakpoint = Number($('script[gumby-breakpoint]').attr('gumby-breakpoint')) || 768;
+		this.touchEventsLoaded = false;
+		this.uiModulesReady = false;
+		this.uiModules = {};
+		this.inits = {};
 
-		// Gumby data object for storing simpleUI classes and handlers 
-		var gumbyData = {},
+		// jQuery mobile touch events
+		var touch = $('script[gumby-touch]').attr('gumby-touch'),
+			path = $('script[gumby-path]').attr('gumby-path');
 
-			setGumbyData = function (key, value) {
-				return gumbyData[key] = value;
-			},
+		// do not use touch events
+		if(touch === 'false') {
+			this.touchEvents = false;
 
-			getGumbyData = function (key) {
-				return gumbyData[key] || false;
-			},
-
-			/**
-			 * Simple UI Elements
-			 * ------------------
-			 * UI elements that bind to an event, toggle 
-			 * a class with possibility to run simple logic 
-			 * on completion and test for specific conditions
-			 */
-			simpleUI = {
-
-				// simple UI elements holder object
-				ui: [
-				
-					// checkbox - check/uncheck (including hidden input) on click
-					{
-						selector: '.checkbox',
-						onEvent: 'click',
-						className: 'checked',
-						target: false,
-						condition: false,
-						// check/uncheck hidden checkbox input
-						complete: function ($e) {
-							var checked = $e.hasClass('checked');
-							$e.children('input').attr('checked', checked).change();
-						}
-					},
-
-					// radio - check/uncheck (including hidden input) on click 
-					// also uncheck all others with same name
-					{
-						selector: '.radio',
-						onEvent: 'click',
-						className: 'checked',
-						target: false,
-						condition: false,
-						// check hidden radio input and uncheck others
-						complete: function ($e) {
-							var $input = $e.children('input'),
-								// radio buttons with matching names in the same group
-								$otherInputs = $('input[name="' + $input.attr('name') + '"]');
-
-							// uncheck other radio buttons that are currently checked
-							// loop round so we can trigger change on required elements
-							$otherInputs.each(function() {
-								var $this = $(this);
-
-								// uncheck select radio buttons in group
-								$this.attr('checked', false).parent().removeClass('checked');
-							});
-
-							// check this one and trigger change on it
-							$input.attr('checked', true).change().parent().addClass('checked')
-						}
-					},	
-
-					// validation - add/remove error class dependent on value being present
-					// conditional method used to check for value
-					{
-						selector: 'form[data-form="validate"] .field',
-						onEvent: 'blur',
-						className: 'error',
-						target: false,
-						// check input is required and if so add/remove error class based on present value
-						condition: function ($e) { 
-							var $child = $e.find('input, textarea').first(),
-								val = $child.val(),
-								req = $child.attr('data-form');
-
-							if(!req || req !== 'required') {
-								return false;
-							}
-
-							// email/regular validation
-							if (($child.attr('type') === 'email' && !val.match(/^[\w.%&=+$#!-']+@[\w.-]+\.[a-zA-Z]{2,4}$/)) || !val.length) {
-								$e.addClass('error');
-								return false;
-							}
-							
-							$e.removeClass('error');
-						},
-						complete: false
-					},
-
-					// toggles - toggle active class on itself and selector in data-for
-					// on click
-					{
-						selector: '.toggle:not([data-on]), .toggle[data-on="click"]',
-						onEvent: 'click',
-						className: 'active',
-						target: function($e) {
-							return $e.add($($e.attr('data-for')));
-						},
-						condition: false,
-						complete: false
-					},
-
-					// on mouseover (will always add class) and mouseout (will always remove class)
-					{
-						selector: '.toggle[data-on="hover"]',
-						onEvent: 'mouseover mouseout',
-						className: 'active',
-						target: function($e) {
-							return $e.add($($e.attr('data-for')));
-						},
-						condition: false,
-						complete: false
-					}
-				],
-
-				// initialize simple UI
-				init: function () {
-
-					var x, ui, $e, callBack, conditionalCallBack, activeClass, targetName;
-
-					// loop round gumby UI elements applying active/inactive class logic
-					for(x = 0; x < simpleUI.ui.length; x++) {
-
-						ui = simpleUI.ui[x];
-						$e = $(ui.selector);
-						// complete call back
-						callBack = ui.complete && typeof ui.complete === 'function' ? ui.complete : false;
-						// conditional callback
-						conditionalCallBack = ui.condition && typeof ui.condition === 'function' ? ui.condition : false;
-						targetName = ui.target && typeof ui.target === 'function' ? ui.target : false;
-						activeClass = ui.className || false;
-
-						// store UI data
-						// replace spaces with dashes for GumbyData object reference
-						setGumbyData(ui.selector.replace(' ', '-'), {
-							'GumbyCallback' : callBack,
-							'GumbyConditionalCallBack' : conditionalCallBack,
-							'GumbyActiveClass' : activeClass,
-							'GumbyTarget' : targetName
-						});
-
-						// bind it all!
-						$(document).on(ui.onEvent, ui.selector, function (e) {
-							e.preventDefault();
-
-							var $this = $(this),
-								$target = $(this),
-								gumbyData = getGumbyData(e.handleObj.selector.replace(' ', '-')),
-								condition = true;
-
-							// if there is a conditional function test it here
-							// leaving if it returns false
-							if(gumbyData.GumbyConditionalCallBack) {
-								return condition = gumbyData.GumbyConditionalCallBack($this);
-							}
-
-							// no conditional or it passed so toggle class
-							if (gumbyData.GumbyActiveClass) {
-								// check for sepcified target
-								if(gumbyData.GumbyTarget) {
-									$target = gumbyData.GumbyTarget($this);
-								}
-								$target.toggleClass(gumbyData.GumbyActiveClass);
-							}
-
-							// if complete call back present call it here
-							if (gumbyData.GumbyCallback) {
-								gumbyData.GumbyCallback($this);
-							}
-						});
-					}
-				}
-			},
-
-			/**
-			 * Complex UI Elements
-			 * ------------------
-			 * UI elements that require logic passed the
-			 * capabilities of simple add/remove class.
-			 */
-			complexUI = {
-
-				// init separate complexUI elements
-				init: function () {
-					complexUI.pickers();
-					complexUI.skipLinks();
-					complexUI.tabs();
-				},
-
-				// pickers - open picker on click and update <select> and picker label when option chosen
-				pickers: function() {
-
-					// open picker on click
-					$(document).on('click', '.picker', function (e) {
-						e.preventDefault();
-
-						var $this = $(this),
-							openTimer = null;
-
-						// custom .picker style are removed on handheld devices using :after to insert hidden content and inform JS 
-						if (window.getComputedStyle && window.getComputedStyle($this.get(0), ':after').getPropertyValue('content') === 'handheld') {
-							return false;
-						}
-
-						// mouseout for > 500ms will close picker
-						$this.hover(function () {
-							clearTimeout(openTimer);
-						}, function () {
-							var $this = $(this);
-							openTimer = setTimeout(function () {
-								$this.removeClass('open');
-							}, 500);
-						});
-
-						$this.toggleClass('open');
-					});
-
-					// clicking children elements should update hidden <select> and .picker active label
-					$(document).on('click', '.picker > ul > li', function (e) {
-						e.preventDefault();
-
-						var $this = $(this),
-							$parent = $this.parents('.picker'),
-							val = $this.children('a').html();
-
-						// update label
-						$parent.children('.toggle').html(val + '<span class="caret"></span>');
-
-						// update hidden select and trigger change event
-						$parent.find('option').attr('selected', false).eq($this.index()  +  1)
-							   .attr('selected', true).parent('select').change();
-					});
-				},
-
-				// skiplinks - slide to data-type content area on click of skiplink and on window load if hash present
-				skipLinks: function () {
-					var skip = function () {
-
-						var skipTypeParts,
-							skipType,
-							$skipTos = $('[data-type]'),
-							$skipTo = false,
-							onWin = false,
-							$this = $(this);
-
-						if ($this.get(0) === window  && !window.location.hash) {
-							return false;
-						}
-
-						// initial load skip
-						if ($this.get(0) === window && window.location.hash) {
-							skipType = window.location.hash.replace('#', '');
-							onWin = true;
-						} else {
-							skipTypeParts = $this.attr('href').split('#');
-							skipType = skipTypeParts[skipTypeParts.length - 1];
-						}
-
-						// loop round potential data-type matches
-						$skipTos.each(function () {
-							// data-type can be multiple space separated values
-							var typeParts = $(this).attr('data-type').split(' '), x;
-
-							// find first match and break the each
-							for (x in typeParts) {
-								if (typeParts[x] === skipType) {
-									$skipTo = $(this);
-									return false;
-								}
-							}
-						});
-
-						if (!$skipTo.length) {
-							return false;
-						}
-
-						// scroll to skiplink 
-						$('body,html').animate({
-							'scrollTop' : $skipTo.offset().top
-						}, 350);
-
-						// update hash if  not an initial hash load
-						if (onWin) {
-							window.location.hash = skipType;
-						}
-
-					};
-
-					// bind to skip links and window load
-					$(document).on('click', '.skiplink a, .skipnav ul li a, .skip', skip);
-					$(window).load(skip);
-				},
-
-				// tabs - activate tab and tab content on click as well as on window load if hash present
-				tabs: function () {
-
-					var activateTab = function ($tab) {
-						var // this links tabs set
-							$tabs = $tab.parents('.tabs'),
-							// currently active tab
-							activeTab = {
-								'tab' : $tabs.find('ul').children('li.active'),
-								'content' : $tabs.find('div[data-tab].active')
-							},
-							// newly clicked tab
-							newTab = {
-								'tab' : $tab.parent('li'),
-								'content' : $tabs.find('[data-tab=' + $tab.attr('href').replace('#', '') + ']')
-							},
-							x, y;
-
-						// remove active class from tab and content
-						for (x in activeTab) {
-							activeTab[x].removeClass('active');
-						}
-
-						// add active class to tab and content
-						for (y in newTab) {
-							newTab[y].addClass('active');
-						}
-					}
-
-					// hook up tab links
-					$(document).on('click', '.tabs > ul > li > a', function(e) {
-						activateTab($(this));
-					});
-
-					// hook up initial load active tab 
-					if (window.location.hash) {
-						var $activeTab = $('a[href="'  +  window.location.hash  +  '"]');
-						if ($activeTab.length && $activeTab.parents('.tabs').length) {
-							activateTab($activeTab);
-						}
-					}
-				}
-			},
-
-			// initialize Gumby
-			init = function () {
-				simpleUI.init();
-				complexUI.init();
-			};
-
-		// return public methods
-		return {
-			i: init
+		// set path to jQuery mobile
+		// support touch/path attrs for backwards compatibility
+		} else {
+			if(touch) {
+				this.touchEvents = touch;
+			} else if(path) {
+				this.touchEvents = path;
+			}
 		}
-	}().i();
 
-})(window.jQuery);
+		// update click property to bind to click/tap
+		if(this.touchDevice) {
+			this.click += ' tap';
+		}
 
+		// add gumby-touch/gumby-no-touch classes
+		// gumby touch == touch enabled && smaller than defined breakpoint
+		if(this.touchDevice && $(window).width() < this.breakpoint) {
+			this.$html.addClass('gumby-touch');
+			this.gumbyTouch = true;
+		} else {
+			this.$html.addClass('gumby-no-touch');
+		}
+
+		if(this.debugMode) {
+			this.debug('Gumby is in debug mode');
+		}
+	}
+
+	// initialize Gumby
+	Gumby.prototype.init = function(options) {
+		var scope = this,
+			opts = options ? options : {};
+
+		// call ready() code when dom is ready
+		this.$dom.ready(function() {
+			if(opts.debug) {
+				scope.debugMode = true;
+			}
+
+			scope.debug("Initializing Gumby");
+
+			// init UI modules
+			var mods = opts.uiModules ? opts.uiModules : false;
+			scope.initUIModules(mods);
+
+			if(scope.onReady) {
+				scope.onReady();
+			}
+
+			// call oldie() callback if applicable
+			if(scope.isOldie && scope.onOldie) {
+				scope.onOldie();
+			}
+
+			// call touch() callback if applicable
+			if(Modernizr.touch && scope.onTouch) {
+				scope.onTouch();
+			}
+		});
+
+		return this;
+	};
+
+	Gumby.prototype.helpers = function() {
+		if(this.onReady) {
+			this.onReady();
+		}
+
+		// call oldie() callback if applicable
+		if(this.isOldie && this.onOldie) {
+			this.onOldie();
+		}
+
+		// call touch() callback if applicable
+		if(Modernizr.touch && this.onTouch) {
+			this.onTouch();
+		}
+	};
+
+	// public helper - set Gumby ready callback
+	Gumby.prototype.ready = function(code) {
+		if(code && typeof code === 'function') {
+			this.onReady = code;
+		}
+
+		return this;
+	};
+
+	// public helper - set oldie callback
+	Gumby.prototype.oldie = function(code) {
+		if(code && typeof code === 'function') {
+			this.onOldie = code;
+		}
+
+		return this;
+	};
+
+	// public helper - set touch callback
+	Gumby.prototype.touch = function(code) {
+		if(code && typeof code === 'function') {
+			this.onTouch = code;
+		}
+
+		return this;
+	};
+
+	// print to console if available and we're in debug mode
+	Gumby.prototype.console = function(type, data) {
+		if(!this.debugMode || !window.console) { return; }
+		console[console[type] ? type : 'log'](data.length > 1 ? Array.prototype.slice.call(data) : data[0]);
+	};
+
+	// pass args onto console method for output
+	Gumby.prototype.log = function() { this.console('log', arguments); };
+	Gumby.prototype.debug = function() { this.console('debug', arguments); };
+	Gumby.prototype.warn = function() { this.console('warn', arguments); };
+	Gumby.prototype.error = function() { this.console('error', arguments); };
+
+	// public helper - return debuggin object including uiModules object
+	Gumby.prototype.dump = function() {
+		return {
+			$dom: this.$dom,
+			isOldie: this.isOldie,
+			touchEvents: this.touchEvents,
+			debugMode: this.debugMode,
+			autoInit: this.autoInit,
+			uiModules: this.uiModules,
+			click: this.click
+		};
+	};
+
+	// grab attribute value, testing data- gumby- and no prefix
+	Gumby.prototype.selectAttr = function() {
+		var i = 0;
+
+		// any number of attributes can be passed
+		for(; i < arguments.length; i++) {
+			// various formats
+			var attr = arguments[i],
+				dataAttr = 'data-'+arguments[i],
+				gumbyAttr = 'gumby-'+arguments[i];
+
+			// first test for data-attr
+			if(this.is('['+dataAttr+']')) {
+				return this.attr(dataAttr) ? this.attr(dataAttr) : true;
+
+			// next test for gumby-attr
+			} else if(this.is('['+gumbyAttr+']')) {
+				return this.attr(gumbyAttr) ? this.attr(gumbyAttr) : true;
+
+			// finally no prefix
+			} else if(this.is('['+attr+']')) {
+				return this.attr(attr) ? this.attr(attr) : true;
+			}
+		}
+
+		// none found
+		return false;
+	};
+
+	// add an initialisation method
+	Gumby.prototype.addInitalisation = function(ref, code) {
+		this.inits[ref] = code;
+	};
+
+	// initialize a uiModule, single / array of module refs
+	Gumby.prototype.initialize = function(ref, all) {
+		if(typeof ref === 'object') {
+			var i = 0;
+			for(i; i < ref.length; i++) {
+				if(!this.inits[ref[i]] || typeof this.inits[ref[i]] !== 'function') {
+					this.error('Error initializing module: '+ref[i]);
+					continue;
+				}
+
+				this.inits[ref[i]](all);
+			}
+		} else if(this.inits[ref] && typeof this.inits[ref] === 'function') {
+			this.inits[ref](all);
+		} else {
+			this.error('Error initializing module: '+ref);
+		}
+
+		return this;
+	};
+
+	// store a UI module
+	Gumby.prototype.UIModule = function(data) {
+		var module = data.module;
+		this.uiModules[module] = data;
+	};
+
+	// loop round and init all UI modules
+	Gumby.prototype.initUIModules = function(mods) {
+		var x, m, arr = this.uiModules;
+
+		// only initialise specified modules
+		if(mods) {
+			arr = mods;
+		}
+
+		// initialise everything
+		for(x in arr) {
+			m = mods ? arr[x] : x;
+			this.uiModules[m].init();
+		}
+	};
+
+	window.Gumby = new Gumby();
+
+}(jQuery);

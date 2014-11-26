@@ -1,22 +1,36 @@
 # -*- encoding: utf-8 -*-
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'gumby-rails/version'
+require "gumby/rails/version"
 
-Gem::Specification.new do |gem|
-  gem.name          = "gumby-rails"
-  gem.version       = Gumby::Rails::VERSION
-  gem.authors       = ["Fábio Luiz Nery de Miranda"]
-  gem.email         = ["fabio@miranti.net.br"]
-  gem.description   = %q{A rails gem for http://gumbyframework.com assets}
-  gem.summary       = %q{}
-  gem.homepage      = "https://github.com/fabiolnm/gumby-rails"
+Gem::Specification.new do |s|
+  s.name          = "gumby-rails"
+  s.version       = Gumby::Rails::VERSION
+  s.authors       = ["Fábio Luiz Nery de Miranda"]
+  s.email         = ["fabio@miranti.net.br"]
+  s.description   = %q{A rails gem for http://gumbyframework.com assets}
+  s.summary       = %q{}
+  s.homepage      = "https://github.com/fabiolnm/gumby-rails"
 
-  gem.files         = `git ls-files`.split($/)
-  gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
-  gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.require_paths = ["lib"]
+  #s.files         = `git ls-files`.split($/)
+  #s.executables   = s.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+  s.test_files    = s.files.grep(%r{^(test|spec|features)/})
+  s.require_paths = ["lib"]
 
-  gem.add_development_dependency "jquery-rails"
-  gem.add_development_dependency "modernizr-rails"
+  # s.add_runtime_dependency 'activesupport'#, ['>= 3', '< 5']
+  s.add_runtime_dependency 'rails', ">= 3"
+
+  s.add_dependency "sprockets",   "< 2.12.0"
+  s.add_development_dependency "sass-rails",  "~> 4.0.5"
+  #s.add_dependency "sass",        "~> 3.2.13"
+
+  s.add_development_dependency "jquery-rails"
+  s.add_development_dependency "modernizr-rails"
+  s.add_development_dependency "compass-rails"
+  s.add_development_dependency "modular-scale",  "1.0.6"
+
+  s.add_development_dependency "thor"
+
+
+
 end
