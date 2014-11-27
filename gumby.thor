@@ -48,6 +48,9 @@ class Gumby < Thor
 
     FileUtils.cp_r js_files, javascripts_path
 
+    FileUtils.move  File.join(javascripts_path, "jquery.mobile.custom.min.js"),
+                    File.join(javascripts_path, "jquery.mobile.gumby.min.js")
+
     # Replace:
     # - yep: Gumby.touchEvents+'/jquery.mobile.custom.min.js'
     # with:
@@ -58,7 +61,7 @@ class Gumby < Thor
 
     gsub_file File.join(javascripts_path, "gumby.init.js.erb"),
               /yep: Gumby\.touchEvents\+'\/jquery.mobile.custom.min.js'/,
-              "yep: \"<%= asset_path('jquery.mobile.custom.min.js') %>\""
+              "yep: \"<%= asset_path('jquery.mobile.gumby.min.js') %>\""
 
     ############################################################################
     # 3: Clean and re-copy the sass / stylesheets folder:

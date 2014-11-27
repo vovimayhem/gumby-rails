@@ -4,6 +4,9 @@ module Gumby
 
       initializer "gumby.assets.precompile" do |app|
 
+        # Agregar jquery.mobile custom para gumby:
+        app.config.assets.precompile.push "jquery.mobile.gumby.min.js"
+
         # Agregar los fonts al asset pipeline:
         app.config.assets.precompile.push Gumby::Rails.precompile
 
