@@ -18,3 +18,5 @@ tmp
 gumby-src/
 test/dummy/log/*.log
 test/dummy/public/assets/
+test/pla
+test/plo
