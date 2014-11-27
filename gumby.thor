@@ -16,6 +16,7 @@ class Gumby < Thor
                 path: File.dirname(__FILE__)
     end
 
+    gumby_repo.checkout :master
     gumby_repo.pull
 
     # Traerse la última version tageada, si no existe:
@@ -80,9 +81,12 @@ class Gumby < Thor
 
     # Replace /url\('?../fonts/(.+)'?\)/i" with 'font-url("$1")'
     # at stylesheets/_fonts.scss:
-    #gsub_file File.join(stylesheets_path, "gumby.init.js"),
-    #          /yep: Gumby\.touchEvents\+'\/jquery.mobile.custom.min.js'/,
-    #          "yep: \"<%= asset_path('jquery.mobile.custom.min.js') %>\""
+    gsub_file File.join(stylesheets_path, "gumby", "_fonts.scss"),
+              /\surl\(\.\.\/fonts\/(\S+)\)/ ,
+              ' font-url("\1")'
+    gsub_file File.join(stylesheets_path, "gumby", "_fonts.scss"),
+              /\surl\('\.\.\/fonts\/(\S+)'\)/ ,
+              ' font-url("\1")'
 
   end
 end
