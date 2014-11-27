@@ -18,16 +18,15 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   # s.add_runtime_dependency 'activesupport'#, ['>= 3', '< 5']
-  s.add_runtime_dependency 'rails', ">= 3"
+  s.add_dependency 'rails', ">= 3"
 
   s.add_dependency "sprockets",   "< 2.12.0"
-  s.add_development_dependency "sass-rails",  "~> 4.0.5"
-  #s.add_dependency "sass",        "~> 3.2.13"
+  s.add_dependency "sass-rails"
 
-  s.add_development_dependency "jquery-rails"
-  s.add_development_dependency "modernizr-rails"
-  s.add_development_dependency "compass-rails"
-  s.add_development_dependency "modular-scale",  "1.0.6"
+  s.add_dependency "jquery-rails"
+  s.add_dependency "modernizr-rails"
+  s.add_dependency "compass-rails"
+  s.add_dependency "modular-scale",  "1.0.6"
 
   s.add_development_dependency "thor"
 

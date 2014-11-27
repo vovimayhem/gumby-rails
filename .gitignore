@@ -16,3 +16,5 @@ test/tmp
 test/version_tmp
 tmp
 gumby-src/
+test/dummy/log/*.log
+test/dummy/public/assets/
