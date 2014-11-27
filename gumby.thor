@@ -88,5 +88,11 @@ class Gumby < Thor
               /\surl\('\.\.\/fonts\/(\S+)'\)/ ,
               ' font-url("\1")'
 
+    ############################################################################
+    # 4: Copy demo assets to dummy:
+    dummy_images_path = File.join(File.dirname(__FILE__), "test/dummy/app/assets/images")
+    FileUtils.rm_r  Dir[File.join(dummy_images_path, "*")], force: true
+    FileUtils.cp_r  Dir[File.join(gumby_source_path, "img", "*")], dummy_images_path
+
   end
 end
