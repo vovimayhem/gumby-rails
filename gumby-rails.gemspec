@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
   s.add_dependency "jquery-rails"
   s.add_dependency "modernizr-rails"
   s.add_dependency "compass-rails"
-  s.add_dependency "modular-scale",  "1.0.6"
+  s.add_dependency "modular-scale",  ">= 1.0.6"
 
   s.add_development_dependency "thor"
 
